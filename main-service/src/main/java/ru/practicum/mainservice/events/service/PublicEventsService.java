@@ -13,10 +13,12 @@ import ru.practicum.mainservice.events.dto.EventShortDto;
 import ru.practicum.mainservice.events.model.Event;
 import ru.practicum.mainservice.exception.errors.BadRequestException;
 import ru.practicum.mainservice.exception.errors.NotFoundException;
+import ru.practicum.statsdto.StatDto;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -54,11 +56,25 @@ public class PublicEventsService {
                 onlyAvailable,
                 from,
                 size);
+
+        // Собираем все URI событий
+        List<String> uris = events.stream()
+                .map(e -> "/events/" + e.getId())
+                .collect(Collectors.toList());
+
+        // Получаем статистику для всех URI за один запрос
+        List<StatDto> stats = agf.getStats(LocalDateTime.now().minusYears(1), LocalDateTime.now(), uris, true);
+
+        // Преобразуем список StatDto в Map для быстрого доступа по URI
+        Map<String, Long> viewsMap = stats.stream()
+                .collect(Collectors.toMap(StatDto::getUri, StatDto::getHits));
+
         List<EventShortDto> eventShortDtos = events.stream()
                 .map(e -> {
                     EventShortDto eventShortDto = eventMapper.toEventShortDto(e);
                     eventShortDto.setConfirmedRequests(agf.getConfirmedRequests(e.getId()));
-                    eventShortDto.setViews(agf.getViews(e.getCreatedOn(), "/events/" + e.getId(), true));
+                    String uri = "/events/" + e.getId();
+                    eventShortDto.setViews(viewsMap.getOrDefault(uri, 0L));
                     return eventShortDto;
                 })
                 .toList();
@@ -72,25 +88,6 @@ public class PublicEventsService {
         return eventShortDtos;
     }
 
-    public EventFullDto getEvent(Long id, HttpServletRequest request) {
-
-        Event event = eventRepository.findById(id).orElseThrow(() ->
-                new NotFoundException("There is no such event.",
-                        "Event with id = " + id + " does not exist."));
-
-        if (event.getPublishedOn() == null)
-            throw new NotFoundException("Event not published.",
-                    "Event with id = " + id + " has not been published yet.");
-
-        String ip = request.getRemoteAddr();
-        String uri = request.getRequestURI();
-        agf.addView("explore-with-me", uri, ip);
-
-        EventFullDto eventFullDto = eventMapper.toEventFullDto(event);
-        eventFullDto.setConfirmedRequests(agf.getConfirmedRequests(event.getId()));
-        eventFullDto.setViews(agf.getViews(event.getCreatedOn(), "/events/" + event.getId(), true));
-        return eventFullDto;
-    }
 
     private List<EventShortDto> sortEvents(List<EventShortDto> events, String sort) {
         if (sort.equals("VIEWS")) {

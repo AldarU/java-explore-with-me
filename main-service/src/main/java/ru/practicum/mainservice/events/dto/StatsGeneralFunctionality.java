@@ -33,12 +33,12 @@ public class StatsGeneralFunctionality {
         return statDtos.isEmpty() ? 0L : statDtos.getFirst().getHits();
     }
 
-    /*public List<StatDto> getStats(LocalDateTime start, LocalDateTime end,
+    public List<StatDto> getStats(LocalDateTime start, LocalDateTime end,
                 List<String> uris, boolean unique) {
         List<StatDto> statDtos = statsClient.getStats(start, end,
                 uris, false);
         return statDtos;
-    }*/
+    }
 
     public boolean addView(String app, String uri, String ip) {
         NoteDto noteDto = new NoteDto(app, uri, ip, LocalDateTime.now());
