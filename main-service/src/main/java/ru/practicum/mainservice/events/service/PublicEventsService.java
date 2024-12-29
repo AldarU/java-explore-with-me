@@ -88,6 +88,25 @@ public class PublicEventsService {
         return eventShortDtos;
     }
 
+    public EventFullDto getEvent(Long id, HttpServletRequest request) {
+
+        Event event = eventRepository.findById(id).orElseThrow(() ->
+                new NotFoundException("There is no such event.",
+                        "Event with id = " + id + " does not exist."));
+
+        if (event.getPublishedOn() == null)
+            throw new NotFoundException("Event not published.",
+                    "Event with id = " + id + " has not been published yet.");
+
+        String ip = request.getRemoteAddr();
+        String uri = request.getRequestURI();
+        agf.addView("explore-with-me", uri, ip);
+
+        EventFullDto eventFullDto = eventMapper.toEventFullDto(event);
+        eventFullDto.setConfirmedRequests(agf.getConfirmedRequests(event.getId()));
+        eventFullDto.setViews(agf.getViews(event.getCreatedOn(), "/events/" + event.getId(), true));
+        return eventFullDto;
+    }
 
     private List<EventShortDto> sortEvents(List<EventShortDto> events, String sort) {
         if (sort.equals("VIEWS")) {
