@@ -8,8 +8,12 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class StatDto {
+    @NonNull
     private String app;
-    private String uri;
-    private Long hits;
 
+    @NonNull
+    private String uri;
+
+    @NonNull
+    private Long hits;
 }
