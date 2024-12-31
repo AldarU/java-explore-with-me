@@ -16,12 +16,17 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NoteDto {
+
+    /** Название сервиса. */
     private String app;
 
+    /** URI. */
     private String uri;
 
+    /** IP-адрес, с которого был сделан запрос. */
     private String ip;
 
+    /** Время, когда был сделан запрос. */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime timestamp;
 
