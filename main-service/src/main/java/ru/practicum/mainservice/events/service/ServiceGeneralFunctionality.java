@@ -88,48 +88,40 @@ public class ServiceGeneralFunctionality {
     }
 
     public Comment commentToEventCheck(Long eventId, Long commentId) {
-        return validateEntityRelationship(
-                eventId,
-                commentId,
-                commentRepository,
-                comment -> comment.getEvent().getId(),
-                "Event with id = " + eventId + " does not exist.",
-                "The event with id = " + eventId + " does not contain a comment with id = " + commentId + "."
-        );
+
+        if (!eventRepository.existsById(eventId)) {
+            throw new NotFoundException("There is no such event.",
+                    "Event with id = " + eventId + " does not exist.");
+        }
+
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() ->
+                new NotFoundException("There is no such comment.",
+                        "Comment with id = " + commentId + " does not exist."));
+
+        if (!comment.getEvent().getId().equals(eventId)) {
+            throw new BadRequestException("The event does not contain such a comment.",
+                    "The event with id = " + eventId + " does not contain a comment with id = " + commentId + ".");
+        }
+
+        return comment;
     }
 
     public Reply replyToCommentCheck(Long commentId, Long replyId) {
-        return validateEntityRelationship(
-                commentId,
-                replyId,
-                replyRepository,
-                reply -> reply.getComment().getId(),
-                "Comment with id = " + commentId + " does not exist.",
-                "The comment with id = " + commentId + " does not contain a reply with id = " + replyId + "."
-        );
-    }
 
-    public <T, R> R validateEntityRelationship(
-            Long entityId,
-            Long relatedEntityId,
-            JpaRepository<R, Long> relatedRepo,
-            Function<R, Long> relatedEntityIdExtractor,
-            String notFoundMessage,
-            String badRequestMessage) {
-
-        if (!relatedRepo.existsById(entityId)) {
-            throw new NotFoundException(notFoundMessage, entityId + " does not exist.");
+        if (!commentRepository.existsById(commentId)) {
+            throw new NotFoundException("There is no such comment.",
+                    "Comment with id = " + commentId + " does not exist.");
         }
 
-        R relatedEntity = relatedRepo.findById(relatedEntityId).orElseThrow(() ->
-                new NotFoundException("There is no entity with this ID.",
-                        "Entity with id = " + relatedEntityId + " does not exist."));
+        Reply reply = replyRepository.findById(replyId).orElseThrow(() ->
+                new NotFoundException("There is no such reply.",
+                        "Reply with id = " + replyId + " does not exist."));
 
-        if (!relatedEntityIdExtractor.apply(relatedEntity).equals(entityId)) {
-            throw new BadRequestException(badRequestMessage,
-                    "Entity with id = " + entityId + " does not contain related entity with id = " + relatedEntityId + ".");
+        if (!reply.getComment().getId().equals(commentId)) {
+            throw new BadRequestException("The comment does not contain such a reply.",
+                    "The comment with id = " + commentId + " does not contain a reply with id = " + replyId + ".");
         }
 
-        return relatedEntity;
+        return reply;
     }
 }
