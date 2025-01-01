@@ -3,6 +3,7 @@ package ru.practicum.mainservice.events.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.mainservice.comments.dao.CommentRepository;
 import ru.practicum.mainservice.events.dao.EventRepository;
 import ru.practicum.mainservice.events.dto.StatsGeneralFunctionality;
@@ -32,6 +33,7 @@ public class AdminEventsService {
     private final ServiceGeneralFunctionality sgf;
     private final StatsGeneralFunctionality agf;
 
+    @Transactional
     public List<EventFullDto> getEvents(List<Long> users,
                                         List<EventsStates> states,
                                         List<Long> categories,
@@ -57,6 +59,7 @@ public class AdminEventsService {
         return eventFullDtos;
     }
 
+    @Transactional
     public EventFullDto updateEvent(Long eventId, UpdateEventAdminRequest eventUpdate) {
 
         Event event = eventRepository.findById(eventId).orElseThrow(() ->
@@ -108,11 +111,13 @@ public class AdminEventsService {
         return eventFullDto;
     }
 
+    @Transactional
     public void deleteComment(Long eventId, Long commentId) {
         sgf.commentToEventCheck(eventId, commentId);
         commentRepository.deleteById(commentId);
     }
 
+    @Transactional
     public void deleteReply(Long eventId, Long commentId, Long replyId) {
         sgf.commentToEventCheck(eventId, commentId);
         if (!replyRepository.isBelongsToComment(replyId, commentId)) {

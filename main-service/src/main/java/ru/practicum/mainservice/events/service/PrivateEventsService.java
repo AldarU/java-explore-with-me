@@ -58,8 +58,8 @@ public class PrivateEventsService {
     private final CommentMapper commentMapper;
     private final ReplyMapper replyMapper;
     private final ParticipationMapper participationMapper;
-    private final ServiceGeneralFunctionality sgf;
-    private final StatsGeneralFunctionality agf;
+    private final ServiceGeneralFunctionality serviceGeneralFunctionality;
+    private final StatsGeneralFunctionality statsGeneralFunctionality;
 
     public List<EventShortDto> getEventsCreatedByUser(Long userId, Long from, Long size) {
 
@@ -71,9 +71,9 @@ public class PrivateEventsService {
 
         List<EventShortDto> eventShortDtos = events.stream().map(e -> {
             EventShortDto eventShortDto = eventMapper.toEventShortDto(e);
-            eventShortDto.setConfirmedRequests(sgf.getConfirmedRequests(e.getId()));
-            eventShortDto.setComments(sgf.getCountOfComments(e.getId()));
-            eventShortDto.setViews(agf.getViews(e.getCreatedOn(),
+            eventShortDto.setConfirmedRequests(serviceGeneralFunctionality.getConfirmedRequests(e.getId()));
+            eventShortDto.setComments(serviceGeneralFunctionality.getCountOfComments(e.getId()));
+            eventShortDto.setViews(statsGeneralFunctionality.getViews(e.getCreatedOn(),
                     String.format("/events/%d", e.getId()), false));
             return eventShortDto;
         }).toList();
@@ -105,9 +105,9 @@ public class PrivateEventsService {
         event = eventRepository.save(event);
 
         EventFullDto eventFullDto = eventMapper.toEventFullDto(event);
-        eventFullDto.setConfirmedRequests(sgf.getConfirmedRequests(eventFullDto.getId()));
-        eventFullDto.setComments(sgf.getCountOfComments(eventFullDto.getId()));
-        eventFullDto.setViews(agf.getViews(eventFullDto.getCreatedOn(),
+        eventFullDto.setConfirmedRequests(serviceGeneralFunctionality.getConfirmedRequests(eventFullDto.getId()));
+        eventFullDto.setComments(serviceGeneralFunctionality.getCountOfComments(eventFullDto.getId()));
+        eventFullDto.setViews(statsGeneralFunctionality.getViews(eventFullDto.getCreatedOn(),
                 String.format("/events/%d", eventFullDto.getId()), false));
 
         log.debug("MAIN: {} was created.", event);
@@ -129,9 +129,9 @@ public class PrivateEventsService {
         }
 
         EventFullDto eventFullDto = eventMapper.toEventFullDto(event);
-        eventFullDto.setConfirmedRequests(sgf.getConfirmedRequests(eventFullDto.getId()));
-        eventFullDto.setComments(sgf.getCountOfComments(eventFullDto.getId()));
-        eventFullDto.setViews(agf.getViews(eventFullDto.getCreatedOn(),
+        eventFullDto.setConfirmedRequests(serviceGeneralFunctionality.getConfirmedRequests(eventFullDto.getId()));
+        eventFullDto.setComments(serviceGeneralFunctionality.getCountOfComments(eventFullDto.getId()));
+        eventFullDto.setViews(statsGeneralFunctionality.getViews(eventFullDto.getCreatedOn(),
                 String.format("/events/%d", eventFullDto.getId()), false));
 
         log.debug("MAIN: {} was found.", event);
@@ -163,7 +163,7 @@ public class PrivateEventsService {
             event.setEventDate(eventUpdate.getEventDate());
         }
 
-        sgf.updateEvent(event, eventUpdate);
+        serviceGeneralFunctionality.updateEvent(event, eventUpdate);
         if (eventUpdate.getStateAction() != null) {
             if (eventUpdate.getStateAction().equals(EventsStatesAction.SEND_TO_REVIEW))
                 event.setState(EventsStates.PENDING);
@@ -173,9 +173,9 @@ public class PrivateEventsService {
 
         event = eventRepository.save(event);
         EventFullDto eventFullDto = eventMapper.toEventFullDto(event);
-        eventFullDto.setConfirmedRequests(sgf.getConfirmedRequests(eventFullDto.getId()));
-        eventFullDto.setComments(sgf.getCountOfComments(eventFullDto.getId()));
-        eventFullDto.setViews(agf.getViews(eventFullDto.getCreatedOn(),
+        eventFullDto.setConfirmedRequests(serviceGeneralFunctionality.getConfirmedRequests(eventFullDto.getId()));
+        eventFullDto.setComments(serviceGeneralFunctionality.getCountOfComments(eventFullDto.getId()));
+        eventFullDto.setViews(statsGeneralFunctionality.getViews(eventFullDto.getCreatedOn(),
                 String.format("/events/%d", eventFullDto.getId()), false));
 
         log.debug("MAIN: {} was updated.", event);
@@ -298,7 +298,7 @@ public class PrivateEventsService {
                 new NotFoundException("There is no such user.",
                         "User with id = " + userId + " does not exist."));
 
-        Comment comment = sgf.commentToEventCheck(eventId, commentId);
+        Comment comment = serviceGeneralFunctionality.commentToEventCheck(eventId, commentId);
 
         Reply reply = replyMapper.toReply(newReplyDto);
         reply.setCreatedOn(LocalDateTime.now());
@@ -331,7 +331,7 @@ public class PrivateEventsService {
                 new NotFoundException("There is no such user.",
                         "User with id = " + userId + " does not exist."));
 
-        Comment comment = sgf.commentToEventCheck(eventId, commentId);
+        Comment comment = serviceGeneralFunctionality.commentToEventCheck(eventId, commentId);
 
         CommentLike commentLike = CommentLike.builder()
                 .user(user)
@@ -342,7 +342,7 @@ public class PrivateEventsService {
         CommentLike savedCommentLike = commentLikeRepository.save(commentLike);
         log.debug("MAIN: {} was created.", savedCommentLike);
         FullCommentDto fullCommentDto = commentMapper.toFullCommentDto(comment);
-        sgf.fillFullCommentDto(fullCommentDto);
+        serviceGeneralFunctionality.fillFullCommentDto(fullCommentDto);
         return fullCommentDto;
     }
 
@@ -353,7 +353,7 @@ public class PrivateEventsService {
             throw new NotFoundException("There is no such user.",
                     "User with id = " + userId + " does not exist.");
 
-        Comment comment = sgf.commentToEventCheck(eventId, commentId);
+        Comment comment = serviceGeneralFunctionality.commentToEventCheck(eventId, commentId);
 
         if (!commentLikeRepository.existsByCommentIdAndUserId(commentId, userId)) {
             throw new NotFoundException("There is no such like.",
@@ -363,7 +363,7 @@ public class PrivateEventsService {
         commentLikeRepository.deleteByCommentIdAndUserId(commentId, userId);
         log.debug("MAIN: {} was removed.", commentId);
         FullCommentDto fullCommentDto = commentMapper.toFullCommentDto(comment);
-        sgf.fillFullCommentDto(fullCommentDto);
+        serviceGeneralFunctionality.fillFullCommentDto(fullCommentDto);
         return fullCommentDto;
     }
 
@@ -373,9 +373,9 @@ public class PrivateEventsService {
                 new NotFoundException("There is no such user.",
                         "User with id = " + userId + " does not exist."));
 
-        sgf.commentToEventCheck(eventId, commentId);
+        serviceGeneralFunctionality.commentToEventCheck(eventId, commentId);
 
-        Reply reply = sgf.replyToCommentCheck(commentId, replyId);
+        Reply reply = serviceGeneralFunctionality.replyToCommentCheck(commentId, replyId);
 
         ReplyLike replyLike = ReplyLike.builder()
                 .user(user)
@@ -386,7 +386,7 @@ public class PrivateEventsService {
         ReplyLike savedReplyLike = replyLikeRepository.save(replyLike);
         log.debug("MAIN: {} was created.", savedReplyLike);
         FullReplyDto fullReplyDto = replyMapper.toFullReplyDto(reply);
-        sgf.fillFullReplyDto(fullReplyDto);
+        serviceGeneralFunctionality.fillFullReplyDto(fullReplyDto);
         return fullReplyDto;
     }
 
@@ -397,9 +397,9 @@ public class PrivateEventsService {
             throw new NotFoundException("There is no such user.",
                     "User with id = " + userId + " does not exist.");
 
-        sgf.commentToEventCheck(eventId, commentId);
+        serviceGeneralFunctionality.commentToEventCheck(eventId, commentId);
 
-        Reply reply = sgf.replyToCommentCheck(commentId, replyId);
+        Reply reply = serviceGeneralFunctionality.replyToCommentCheck(commentId, replyId);
 
         if (!replyLikeRepository.existsByReplyIdAndUserId(replyId, userId)) {
             throw new NotFoundException("There is no such like.",
@@ -409,7 +409,7 @@ public class PrivateEventsService {
         replyLikeRepository.deleteByReplyIdAndUserId(replyId, userId);
         log.debug("MAIN: {} was removed.", replyId);
         FullReplyDto fullReplyDto = replyMapper.toFullReplyDto(reply);
-        sgf.fillFullReplyDto(fullReplyDto);
+        serviceGeneralFunctionality.fillFullReplyDto(fullReplyDto);
         return fullReplyDto;
     }
 
@@ -419,7 +419,7 @@ public class PrivateEventsService {
             throw new NotFoundException("There is no such user.",
                     "User with id = " + userId + " does not exist.");
 
-        Comment comment = sgf.commentToEventCheck(eventId, commentId);
+        Comment comment = serviceGeneralFunctionality.commentToEventCheck(eventId, commentId);
 
         if (!comment.getAuthor().getId().equals(userId)) {
             throw new BadRequestException("The user cannot edit this comment.",
@@ -435,9 +435,9 @@ public class PrivateEventsService {
             throw new NotFoundException("There is no such user.",
                     "User with id = " + userId + " does not exist.");
 
-        sgf.commentToEventCheck(eventId, commentId);
+        serviceGeneralFunctionality.commentToEventCheck(eventId, commentId);
 
-        Reply reply = sgf.replyToCommentCheck(commentId, replyId);
+        Reply reply = serviceGeneralFunctionality.replyToCommentCheck(commentId, replyId);
 
         if (!reply.getAuthor().getId().equals(userId)) {
             throw new BadRequestException("The user cannot edit this reply.",
