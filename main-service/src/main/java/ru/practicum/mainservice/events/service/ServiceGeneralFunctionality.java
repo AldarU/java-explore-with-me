@@ -1,7 +1,6 @@
 package ru.practicum.mainservice.events.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import ru.practicum.mainservice.categories.dao.CategoryRepository;
 import ru.practicum.mainservice.categories.model.Category;
@@ -28,7 +27,6 @@ import ru.practicum.mainservice.replylikes.dto.ReplyLikeMapper;
 import ru.practicum.mainservice.replylikes.model.ReplyLike;
 
 import java.util.List;
-import java.util.function.Function;
 
 @Component
 @RequiredArgsConstructor
