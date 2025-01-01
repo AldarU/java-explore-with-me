@@ -12,6 +12,7 @@ import ru.practicum.mainservice.categories.model.Category;
 import ru.practicum.mainservice.commentlikes.dao.CommentLikeRepository;
 import ru.practicum.mainservice.commentlikes.dto.CommentLikesMapper;
 import ru.practicum.mainservice.comments.dao.CommentRepository;
+import ru.practicum.mainservice.comments.model.Comment;
 import ru.practicum.mainservice.events.dao.EventRepository;
 import ru.practicum.mainservice.events.dto.StatsGeneralFunctionality;
 import ru.practicum.mainservice.events.dto.EventFullDto;
@@ -25,6 +26,7 @@ import ru.practicum.mainservice.exception.errors.ConflictException;
 import ru.practicum.mainservice.exception.errors.NotFoundException;
 import ru.practicum.mainservice.replies.dao.ReplyRepository;
 import ru.practicum.mainservice.replies.dto.ReplyMapper;
+import ru.practicum.mainservice.replies.model.Reply;
 import ru.practicum.mainservice.replylikes.dao.ReplyLikeRepository;
 import ru.practicum.mainservice.replylikes.dto.ReplyLikeMapper;
 import ru.practicum.mainservice.user.dto.UserMapper;
@@ -285,38 +287,43 @@ class AdminEventsServiceTest {
 
     @Test
     void deleteComment() {
+        // Настраиваем поведение мока для репозиториев
+        when(eventRepository.existsById(1L)).thenReturn(true);
+        when(commentRepository.existsById(1L)).thenReturn(true);
+        when(commentRepository.existsById(2L)).thenReturn(false);
 
+        // Негативные тесты
         NotFoundException notFoundException = assertThrows(NotFoundException.class, () ->
-                adminEventsService.deleteComment(1L, 1L));
-        eventExistById = true;
-        notFoundException = assertThrows(NotFoundException.class, () ->
-                adminEventsService.deleteComment(1L, 1L));
+                adminEventsService.deleteComment(1L, 2L)); // Комментарий не существует
 
-        commentExistById = true;
+        when(commentRepository.existsById(1L)).thenReturn(true);
+        when(commentRepository.findById(1L)).thenReturn(Optional.of(new Comment()));
+
         BadRequestException badRequestException = assertThrows(BadRequestException.class, () ->
-                adminEventsService.deleteComment(2L, 1L));
+                adminEventsService.deleteComment(1L, 1L)); // Если комментарий не принадлежит событию
 
-        replyIsBelongsToComment = true;
-        assertDoesNotThrow(() -> adminEventsService.deleteComment(1L, 1L));
+        // Позитивный тест
+        assertDoesNotThrow(() -> adminEventsService.deleteComment(1L, 1L)); // Успешное удаление
     }
 
     @Test
     void deleteReply() {
+        when(eventRepository.existsById(1L)).thenReturn(true);
+        when(commentRepository.existsById(1L)).thenReturn(true);
+        when(replyRepository.existsById(1L)).thenReturn(true);
+        when(replyRepository.existsById(2L)).thenReturn(false);
+
+        // Негативные тесты
         NotFoundException notFoundException = assertThrows(NotFoundException.class, () ->
-                adminEventsService.deleteReply(1L, 1L, 1L));
+                adminEventsService.deleteReply(1L, 2L, 1L)); // Ответ не существует
 
-        eventExistById = true;
-        notFoundException = assertThrows(NotFoundException.class, () ->
-                adminEventsService.deleteReply(1L, 1L, 1L));
+        when(commentRepository.findById(1L)).thenReturn(Optional.of(new Comment()));
+        when(replyRepository.findById(1L)).thenReturn(Optional.of(new Reply()));
 
-        commentExistById = true;
         BadRequestException badRequestException = assertThrows(BadRequestException.class, () ->
-                adminEventsService.deleteReply(2L, 1L, 1L));
+                adminEventsService.deleteReply(1L, 1L, 2L)); // Ответ не принадлежит комментарию
 
-        badRequestException = assertThrows(BadRequestException.class, () ->
-                adminEventsService.deleteReply(1L, 1L, 1L));
-
-        replyIsBelongsToComment = true;
-        assertDoesNotThrow(() -> adminEventsService.deleteReply(1L, 1L, 1L));
+        // Позитивный тест
+        assertDoesNotThrow(() -> adminEventsService.deleteReply(1L, 1L, 1L)); // Успешное удаление
     }
 }
