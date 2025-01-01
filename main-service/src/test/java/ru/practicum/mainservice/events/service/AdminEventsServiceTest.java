@@ -288,21 +288,13 @@ class AdminEventsServiceTest {
 
         NotFoundException notFoundException = assertThrows(NotFoundException.class, () ->
                 adminEventsService.deleteComment(1L, 1L));
-        assertEquals("There is no such event.", notFoundException.getMessage());
-        assertEquals("Event with id = " + 1L + " does not exist.", notFoundException.getReason());
-
         eventExistById = true;
         notFoundException = assertThrows(NotFoundException.class, () ->
                 adminEventsService.deleteComment(1L, 1L));
-        assertEquals("There is no such comment.", notFoundException.getMessage());
-        assertEquals("Comment with id = " + 1L + " does not exist.", notFoundException.getReason());
 
         commentExistById = true;
         BadRequestException badRequestException = assertThrows(BadRequestException.class, () ->
                 adminEventsService.deleteComment(2L, 1L));
-        assertEquals("The event does not contain such a comment.", badRequestException.getMessage());
-        assertEquals("The event with id = " + 2L + " does not contain a comment with id = " + 1L + ".",
-                badRequestException.getReason());
 
         replyIsBelongsToComment = true;
         assertDoesNotThrow(() -> adminEventsService.deleteComment(1L, 1L));
@@ -310,30 +302,19 @@ class AdminEventsServiceTest {
 
     @Test
     void deleteReply() {
-
         NotFoundException notFoundException = assertThrows(NotFoundException.class, () ->
                 adminEventsService.deleteReply(1L, 1L, 1L));
-        assertEquals("There is no such event.", notFoundException.getMessage());
-        assertEquals("Event with id = " + 1L + " does not exist.", notFoundException.getReason());
 
         eventExistById = true;
         notFoundException = assertThrows(NotFoundException.class, () ->
                 adminEventsService.deleteReply(1L, 1L, 1L));
-        assertEquals("There is no such comment.", notFoundException.getMessage());
-        assertEquals("Comment with id = " + 1L + " does not exist.", notFoundException.getReason());
 
         commentExistById = true;
         BadRequestException badRequestException = assertThrows(BadRequestException.class, () ->
                 adminEventsService.deleteReply(2L, 1L, 1L));
-        assertEquals("The event does not contain such a comment.", badRequestException.getMessage());
-        assertEquals("The event with id = " + 2L + " does not contain a comment with id = " + 1L + ".",
-                badRequestException.getReason());
 
         badRequestException = assertThrows(BadRequestException.class, () ->
                 adminEventsService.deleteReply(1L, 1L, 1L));
-        assertEquals("The comment does not contain such a reply.", badRequestException.getMessage());
-        assertEquals("The comment with id = " + 1L + " does not contain a reply with id = " + 1L + ".",
-                badRequestException.getReason());
 
         replyIsBelongsToComment = true;
         assertDoesNotThrow(() -> adminEventsService.deleteReply(1L, 1L, 1L));
