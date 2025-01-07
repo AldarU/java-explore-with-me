@@ -2,18 +2,21 @@ package ru.practicum.statsdto;
 
 import lombok.*;
 
+/**
+ * Класс для передачи статистики в ответе.
+ */
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class StatDto {
-    @NonNull
+    /** Название сервиса. */
     private String app;
 
-    @NonNull
+    /** URI. */
     private String uri;
 
-    @NonNull
+    /** Количество запросов. */
     private Long hits;
 }
